@@ -407,13 +407,13 @@ public class ShopItem {
         } else if (mode != BUY_AND_SELL) {
             if (discount > 0) {
                 ChatColor c = VMUtils.getCodeBeforePlaceholder(ConfigManager.getStringList(lorePath), "%price%");
-                String prePrice = ConfigManager.getString("currency") + format.format(getSellPrice(amount, false)),
-                        currentPrice = ConfigManager.getString("currency") + format.format(getSellPrice(amount, true));
+                String prePrice = ConfigManager.getBoolean("currency_before") ? ConfigManager.getString("currency") + format.format(getSellPrice(amount, false)) : format.format(getSellPrice(amount, false)) + ConfigManager.getString("currency"),
+                        currentPrice = ConfigManager.getBoolean("currency_before") ? ConfigManager.getString("currency") + format.format(getSellPrice(amount, true)) : format.format(getSellPrice(amount, true)) + ConfigManager.getString("currency");
                 builder.replace("%price%", "§m" + prePrice + c + " " + currentPrice);
             } else {
-                builder.replace("%price%", ConfigManager.getString("currency") + format.format(getSellPrice(amount, false)));
+                builder.replace("%price%", ConfigManager.getBoolean("currency_before") ? ConfigManager.getString("currency") + format.format(getSellPrice(amount, false)) : format.format(getSellPrice(amount, false)) + ConfigManager.getString("currency"));
             }
-            builder.replace("%price_per_unit%", ConfigManager.getString("currency") + format.format(getSellPrice().divide(BigDecimal.valueOf(getAmount()), RoundingMode.HALF_UP)));
+            builder.replace("%price_per_unit%", ConfigManager.getBoolean("currency_before") ? ConfigManager.getString("currency") + format.format(getSellPrice().divide(BigDecimal.valueOf(getAmount()), RoundingMode.HALF_UP)) : format.format(getSellPrice().divide(BigDecimal.valueOf(getAmount()), RoundingMode.HALF_UP)) + ConfigManager.getString("currency"));
         } else {
             boolean isCustomerMenu = path.equals("shopfront");
             if (isAdmin && !isCustomerMenu) {
