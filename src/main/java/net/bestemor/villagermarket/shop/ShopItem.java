@@ -8,6 +8,7 @@ import net.bestemor.villagermarket.menu.EditItemMenu;
 import net.bestemor.villagermarket.menu.StorageHolder;
 import net.bestemor.villagermarket.utils.VMUtils;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -407,11 +408,11 @@ public class ShopItem {
         } else if (mode != BUY_AND_SELL) {
             if (discount > 0) {
                 ChatColor c = VMUtils.getCodeBeforePlaceholder(ConfigManager.getStringList(lorePath), "%price%");
-                String prePrice = ConfigManager.getBoolean("currency_before") ? ConfigManager.getString("currency") + format.format(getSellPrice(amount, false)) : format.format(getSellPrice(amount, false)) + ConfigManager.getString("currency"),
-                        currentPrice = ConfigManager.getBoolean("currency_before") ? ConfigManager.getString("currency") + format.format(getSellPrice(amount, true)) : format.format(getSellPrice(amount, true)) + ConfigManager.getString("currency");
+                String prePrice = ConfigManager.getBoolean("currency_before") ? ConfigManager.getString("currency") + format.format(getSellPrice(amount, false, true)) : format.format(getSellPrice(amount, false, true)) + ConfigManager.getString("currency"),
+                        currentPrice = ConfigManager.getBoolean("currency_before") ? ConfigManager.getString("currency") + format.format(getSellPrice(amount, true, true)) : format.format(getSellPrice(amount, true, true)) + ConfigManager.getString("currency");
                 builder.replace("%price%", "§m" + prePrice + c + " " + currentPrice);
             } else {
-                builder.replace("%price%", ConfigManager.getBoolean("currency_before") ? ConfigManager.getString("currency") + format.format(getSellPrice(amount, false)) : format.format(getSellPrice(amount, false)) + ConfigManager.getString("currency"));
+                builder.replace("%price%", ConfigManager.getBoolean("currency_before") ? ConfigManager.getString("currency") + format.format(getSellPrice(amount, false, true)) : format.format(getSellPrice(amount, false, true)) + ConfigManager.getString("currency"));
             }
             builder.replace("%price_per_unit%", ConfigManager.getBoolean("currency_before") ? ConfigManager.getString("currency") + format.format(getSellPrice().divide(BigDecimal.valueOf(getAmount()), RoundingMode.HALF_UP)) : format.format(getSellPrice().divide(BigDecimal.valueOf(getAmount()), RoundingMode.HALF_UP)) + ConfigManager.getString("currency"));
         } else {
@@ -419,8 +420,8 @@ public class ShopItem {
             if (isAdmin && !isCustomerMenu) {
                 builder.replace("%price%", VMUtils.formatBuySellPrice(getBuyPrice(), getSellPrice()));
             } else if (discount > 0) {
-                String preSell = ConfigManager.getCurrencyBuilder("%price%").replaceCurrency("%price%", getSellPrice(amount, false)).build();
-                String currentSell = ConfigManager.getCurrencyBuilder("%price%").replaceCurrency("%price%", getSellPrice(amount, true)).build();
+                String preSell = ConfigManager.getCurrencyBuilder("%price%").replaceCurrency("%price%", getSellPrice(amount, false, true)).build();
+                String currentSell = ConfigManager.getCurrencyBuilder("%price%").replaceCurrency("%price%", getSellPrice(amount, true, true)).build();
                 String preBuy = ConfigManager.getCurrencyBuilder("%price%").replaceCurrency("%price%", getBuyPrice(amount, false)).build();
                 String currentBuy = ConfigManager.getCurrencyBuilder("%price%").replaceCurrency("%price%", getBuyPrice(amount, true)).build();
 
@@ -429,8 +430,8 @@ public class ShopItem {
                 builder.replace("%buy_price%", "§m" + (isCustomerMenu ? preSell : preBuy) + cBuy + " " + (isCustomerMenu ? currentSell : currentBuy));
                 builder.replace("%sell_price%", "§m" + (isCustomerMenu ? preBuy : preSell) + cSell + " " + (isCustomerMenu ? currentBuy : currentSell));
             } else {
-                builder.replaceCurrency("%buy_price%", isCustomerMenu ? getSellPrice(amount, true) : getBuyPrice(amount, true));
-                builder.replaceCurrency("%sell_price%", isCustomerMenu ? getBuyPrice(amount, true) : getSellPrice(amount, true));
+                builder.replaceCurrency("%buy_price%", isCustomerMenu ? getSellPrice(amount, true, true) : getBuyPrice(amount, true));
+                builder.replaceCurrency("%sell_price%", isCustomerMenu ? getBuyPrice(amount, true) : getSellPrice(amount, true, true));
             }
         }
         List<String> lore = builder.build();
@@ -495,21 +496,25 @@ public class ShopItem {
     }
 
     public BigDecimal getSellPrice() {
-        return getSellPrice(amount, true);
+        return getSellPrice(amount, true, true);
     }
 
     public BigDecimal getBuyPrice() {
         return getBuyPrice(amount, true);
     }
 
-    public BigDecimal getSellPrice(boolean applyDiscount) {
+    public BigDecimal getSellPrice(boolean applyDiscount, boolean globalMultiplier) {
+        BigDecimal price;
         if (sellPrice == null) {
             return BigDecimal.ZERO;
         } else if (!applyDiscount || discount <= 0) {
-            return sellPrice;
+            price = sellPrice;
         } else {
-            return sellPrice.subtract(sellPrice.multiply(BigDecimal.valueOf(discount / 100.0)));
+            price = sellPrice.subtract(sellPrice.multiply(BigDecimal.valueOf(discount / 100.0)));
         }
+        if (globalMultiplier)
+            price = price.multiply(BigDecimal.valueOf(ConfigManager.getDouble("global_multiplier")));
+        return price;
     }
 
     public BigDecimal getBuyPrice(boolean applyDiscount) {
@@ -531,11 +536,11 @@ public class ShopItem {
         return getBuyPrice(applyDiscount).divide(BigDecimal.valueOf(item.getAmount()), 2, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(amount));
     }
 
-    public BigDecimal getSellPrice(int amount, boolean applyDiscount) {
+    public BigDecimal getSellPrice(int amount, boolean applyDiscount, boolean globalMultiplier) {
         if (sellPrice == null) {
             return BigDecimal.ZERO;
         }
-        return getSellPrice(applyDiscount).divide(BigDecimal.valueOf(item.getAmount()), 2, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(amount));
+        return getSellPrice(applyDiscount, globalMultiplier).divide(BigDecimal.valueOf(item.getAmount()), 2, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(amount));
     }
 
     private String getItemName(ItemStack i) {

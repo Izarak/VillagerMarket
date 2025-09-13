@@ -176,7 +176,7 @@ public abstract class VillagerShop {
             config.set("items_for_sale." + slot + ".item", shopItem.getRawItem());
             config.set("items_for_sale." + slot + ".amount", shopItem.getAmount());
             config.set("items_for_sale." + slot + ".trade_amount", shopItem.getItemTradeAmount());
-            config.set("items_for_sale." + slot + ".price", shopItem.isItemTrade() ? shopItem.getItemTrade() : shopItem.getSellPrice(false));
+            config.set("items_for_sale." + slot + ".price", shopItem.isItemTrade() ? shopItem.getItemTrade() : shopItem.getSellPrice(false, false));
             config.set("items_for_sale." + slot + ".buy_price", shopItem.getBuyPrice(false));
             config.set("items_for_sale." + slot + ".mode", shopItem.getMode().toString());
             config.set("items_for_sale." + slot + ".buy_limit", shopItem.getLimit());

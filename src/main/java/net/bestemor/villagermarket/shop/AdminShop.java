@@ -26,7 +26,7 @@ public class AdminShop extends VillagerShop {
     public void buyItem(ShopItem item, int amount, Player player) {
         Economy economy = VMPlugin.getEconomy();
 
-        BigDecimal price = item.getSellPrice(amount, true);
+        BigDecimal price = item.getSellPrice(amount, true, true);
 
         if (!item.verifyPurchase(player, ItemMode.SELL, amount)) {
             return;

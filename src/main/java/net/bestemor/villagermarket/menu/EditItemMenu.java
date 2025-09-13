@@ -99,9 +99,9 @@ public class EditItemMenu extends Menu {
         } else if (item.getSellPrice().equals(BigDecimal.ZERO)) {
             priceBuilder.replace("%price%", ConfigManager.getString("quantity.free"));
         } else if (item.getMode() == ItemMode.BUY_AND_SELL) {
-            priceBuilder.replace("%price%", VMUtils.formatBuySellPrice(item.getBuyPrice(false), item.getSellPrice(false)));
+            priceBuilder.replace("%price%", VMUtils.formatBuySellPrice(item.getBuyPrice(false), item.getSellPrice(false, true)));
         } else {
-            priceBuilder.replaceCurrency("%price%", item.getSellPrice(false));
+            priceBuilder.replaceCurrency("%price%", item.getSellPrice(false, true));
         }
         ItemStack priceItem = priceBuilder.build();
         if (item.getMode() == ItemMode.BUY_AND_SELL) {
