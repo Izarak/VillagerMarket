@@ -270,12 +270,12 @@ public class ShopItem {
         return playerLimits.getOrDefault(player.getUniqueId(), 0);
     }
 
-    public void incrementPlayerTrades(Player player) {
-        playerLimits.put(player.getUniqueId(), getPlayerLimit(player) + 1);
+    public void incrementPlayerTrades(Player player, int amount) {
+        playerLimits.put(player.getUniqueId(), getPlayerLimit(player) + amount);
     }
 
-    public void incrementServerTrades() {
-        serverTrades++;
+    public void incrementServerTrades(int amount) {
+        serverTrades += amount;
     }
 
     private void reloadData(VillagerShop shop) {
@@ -355,11 +355,13 @@ public class ShopItem {
             customer.sendMessage(ConfigManager.getMessage("messages.not_enough_stock"));
             return false;
         }
-        if (!isItemTrade() && verifyMode == SELL && itemTrade == null && economy.getBalance(customer) < getSellPrice().doubleValue()) {
+        if (!isItemTrade() && verifyMode == SELL && itemTrade == null
+                && economy.getBalance(customer) < getSellPrice(amount, true).doubleValue()) {
             customer.sendMessage(ConfigManager.getMessage("messages.not_enough_money"));
             return false;
         }
-        if (!isItemTrade() && verifyMode == BUY && owner != null && itemTrade == null && economy.getBalance(owner) < getBuyPrice().doubleValue()) {
+        if (!isItemTrade() && verifyMode == BUY && owner != null && itemTrade == null
+                && economy.getBalance(owner) < getBuyPrice(amount, true).doubleValue()) {
             customer.sendMessage(ConfigManager.getMessage("messages.owner_not_enough_money"));
             return false;
         }
@@ -372,7 +374,10 @@ public class ShopItem {
             return false;
         }
         boolean bypass = customer.hasPermission("villagermarket.bypass_limit");
-        if (isAdmin && !bypass && limit > 0 && ((limitMode == LimitMode.SERVER && serverTrades >= limit) || (limitMode == LimitMode.PLAYER && getPlayerLimit(customer) >= limit))) {
+        int transactionsAdded = (int) Math.ceil((double) amount / this.amount);
+        int serverTrades = this.serverTrades + transactionsAdded;
+        int playerTrades = getPlayerLimit(customer) + transactionsAdded;
+        if (isAdmin && !bypass && limit > 0 && ((limitMode == LimitMode.SERVER && serverTrades > limit) || (limitMode == LimitMode.PLAYER && playerTrades > limit))) {
             customer.sendMessage(ConfigManager.getMessage("messages.reached_" + (verifyMode == BUY ? "sell" : "buy") + "_limit"));
             return false;
         }
@@ -406,15 +411,20 @@ public class ShopItem {
             builder.replace("%price%", ConfigManager.getString("quantity.free"));
             builder.replace("%price_per_unit%", ConfigManager.getString("quantity.free"));
         } else if (mode != BUY_AND_SELL) {
+            BigDecimal finalPrice = mode == SELL ? getBuyPrice(amount, true) : getSellPrice(amount, true);
             if (discount > 0) {
                 ChatColor c = VMUtils.getCodeBeforePlaceholder(ConfigManager.getStringList(lorePath), "%price%");
-                String prePrice = ConfigManager.getBoolean("currency_before") ? ConfigManager.getString("currency") + format.format(getSellPrice(amount, false, true)) : format.format(getSellPrice(amount, false, true)) + ConfigManager.getString("currency"),
-                        currentPrice = ConfigManager.getBoolean("currency_before") ? ConfigManager.getString("currency") + format.format(getSellPrice(amount, true, true)) : format.format(getSellPrice(amount, true, true)) + ConfigManager.getString("currency");
+                String prePrice = ConfigManager.getCurrencyBuilder("%price%")
+                        .replaceCurrency("%price%", mode == SELL ? getSellPrice(amount, false) : getBuyPrice(amount, false))
+                        .build();
+                String currentPrice = ConfigManager.getCurrencyBuilder("%price%")
+                        .replaceCurrency("%price%", finalPrice)
+                        .build();
                 builder.replace("%price%", "§m" + prePrice + c + " " + currentPrice);
             } else {
-                builder.replace("%price%", ConfigManager.getBoolean("currency_before") ? ConfigManager.getString("currency") + format.format(getSellPrice(amount, false, true)) : format.format(getSellPrice(amount, false, true)) + ConfigManager.getString("currency"));
+                builder.replaceCurrency("%price%", finalPrice);
             }
-            builder.replace("%price_per_unit%", ConfigManager.getBoolean("currency_before") ? ConfigManager.getString("currency") + format.format(getSellPrice().divide(BigDecimal.valueOf(getAmount()), RoundingMode.HALF_UP)) : format.format(getSellPrice().divide(BigDecimal.valueOf(getAmount()), RoundingMode.HALF_UP)) + ConfigManager.getString("currency"));
+            builder.replaceCurrency("%price_per_unit%", getSellPrice().divide(BigDecimal.valueOf(getAmount()), RoundingMode.HALF_UP));
         } else {
             boolean isCustomerMenu = path.equals("shopfront");
             if (isAdmin && !isCustomerMenu) {
@@ -503,6 +513,15 @@ public class ShopItem {
         return getBuyPrice(amount, true);
     }
 
+    public BigDecimal getSellPrice(int amount, boolean applyDiscount) {
+        BigDecimal price = BigDecimal.ZERO;
+
+        for (int i = 0; i < amount; i++) {
+            price.add(getSellPrice(applyDiscount, true));
+        }
+        return price;
+    }
+
     public BigDecimal getSellPrice(boolean applyDiscount, boolean globalMultiplier) {
         BigDecimal price;
         if (sellPrice == null) {
@@ -519,7 +538,7 @@ public class ShopItem {
 
     public BigDecimal getBuyPrice(boolean applyDiscount) {
         if (mode != BUY_AND_SELL) {
-            return sellPrice;
+            return getSellPrice(applyDiscount, true);
         } else if (buyPrice == null) {
             return BigDecimal.ZERO;
         } else if (!applyDiscount || discount <= 0) {
