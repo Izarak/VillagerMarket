@@ -356,7 +356,7 @@ public class ShopItem {
             return false;
         }
         if (!isItemTrade() && verifyMode == SELL && itemTrade == null
-                && economy.getBalance(customer) < getSellPrice(amount, true).doubleValue()) {
+                && economy.getBalance(customer) < getSellPrice(amount, true, true).doubleValue()) {
             customer.sendMessage(ConfigManager.getMessage("messages.not_enough_money"));
             return false;
         }
@@ -411,37 +411,37 @@ public class ShopItem {
             builder.replace("%price%", ConfigManager.getString("quantity.free"));
             builder.replace("%price_per_unit%", ConfigManager.getString("quantity.free"));
         } else if (mode != BUY_AND_SELL) {
-            BigDecimal finalPrice = mode == SELL ? getBuyPrice(amount, true) : getSellPrice(amount, true);
+            BigDecimal finalPrice = mode == SELL ? getSellPrice(amount, true, true) : getBuyPrice(amount, true);
             if (discount > 0) {
                 ChatColor c = VMUtils.getCodeBeforePlaceholder(ConfigManager.getStringList(lorePath), "%price%");
                 String prePrice = ConfigManager.getCurrencyBuilder("%price%")
-                        .replaceCurrency("%price%", mode == SELL ? getSellPrice(amount, false) : getBuyPrice(amount, false))
+                        .replace("%price%", String.format(mode == SELL ? placeCurrencySign(format.format(getSellPrice(amount, false, true))) : placeCurrencySign(format.format(getBuyPrice(amount, false)))))
                         .build();
                 String currentPrice = ConfigManager.getCurrencyBuilder("%price%")
-                        .replaceCurrency("%price%", finalPrice)
+                        .replace("%price%", placeCurrencySign(format.format(finalPrice)))
                         .build();
                 builder.replace("%price%", "§m" + prePrice + c + " " + currentPrice);
             } else {
-                builder.replaceCurrency("%price%", finalPrice);
+                builder.replace("%price%", placeCurrencySign(format.format(finalPrice)));
             }
-            builder.replaceCurrency("%price_per_unit%", getSellPrice().divide(BigDecimal.valueOf(getAmount()), RoundingMode.HALF_UP));
+            builder.replace("%price_per_unit%", placeCurrencySign(format.format(getSellPrice().divide(BigDecimal.valueOf(getAmount()), RoundingMode.HALF_UP))));
         } else {
             boolean isCustomerMenu = path.equals("shopfront");
             if (isAdmin && !isCustomerMenu) {
                 builder.replace("%price%", VMUtils.formatBuySellPrice(getBuyPrice(), getSellPrice()));
             } else if (discount > 0) {
-                String preSell = ConfigManager.getCurrencyBuilder("%price%").replaceCurrency("%price%", getSellPrice(amount, false, true)).build();
-                String currentSell = ConfigManager.getCurrencyBuilder("%price%").replaceCurrency("%price%", getSellPrice(amount, true, true)).build();
-                String preBuy = ConfigManager.getCurrencyBuilder("%price%").replaceCurrency("%price%", getBuyPrice(amount, false)).build();
-                String currentBuy = ConfigManager.getCurrencyBuilder("%price%").replaceCurrency("%price%", getBuyPrice(amount, true)).build();
+                String preSell = ConfigManager.getCurrencyBuilder("%price%").replace("%price%", placeCurrencySign(format.format(getSellPrice(amount, false, true)))).build();
+                String currentSell = ConfigManager.getCurrencyBuilder("%price%").replace("%price%", placeCurrencySign(format.format(getSellPrice(amount, true, true)))).build();
+                String preBuy = ConfigManager.getCurrencyBuilder("%price%").replace("%price%", placeCurrencySign(format.format(getBuyPrice(amount, false)))).build();
+                String currentBuy = ConfigManager.getCurrencyBuilder("%price%").replace("%price%", placeCurrencySign(format.format(getBuyPrice(amount, true)))).build();
 
                 ChatColor cBuy = VMUtils.getCodeBeforePlaceholder(ConfigManager.getStringList(lorePath), "%buy_price%");
                 ChatColor cSell = VMUtils.getCodeBeforePlaceholder(ConfigManager.getStringList(lorePath), "%sell_price%");
                 builder.replace("%buy_price%", "§m" + (isCustomerMenu ? preSell : preBuy) + cBuy + " " + (isCustomerMenu ? currentSell : currentBuy));
                 builder.replace("%sell_price%", "§m" + (isCustomerMenu ? preBuy : preSell) + cSell + " " + (isCustomerMenu ? currentBuy : currentSell));
             } else {
-                builder.replaceCurrency("%buy_price%", isCustomerMenu ? getSellPrice(amount, true, true) : getBuyPrice(amount, true));
-                builder.replaceCurrency("%sell_price%", isCustomerMenu ? getBuyPrice(amount, true) : getSellPrice(amount, true, true));
+                builder.replace("%buy_price%", isCustomerMenu ? placeCurrencySign(format.format(getSellPrice(amount, true, true))) : placeCurrencySign(format.format(getBuyPrice(amount, true))));
+                builder.replace("%sell_price%", isCustomerMenu ? placeCurrencySign(format.format(getBuyPrice(amount, true))) : placeCurrencySign(format.format(getSellPrice(amount, true, true))));
             }
         }
         List<String> lore = builder.build();
@@ -465,6 +465,13 @@ public class ShopItem {
         lore.remove("%limit_lore%");
 
         return lore;
+    }
+
+    public String placeCurrencySign(String input) {
+        if (ConfigManager.isCurrencyBefore())
+            return ConfigManager.getCurrency() + input;
+        else
+            return input + ConfigManager.getCurrency();
     }
 
     public ItemStack getEditorItem() {
@@ -513,15 +520,6 @@ public class ShopItem {
         return getBuyPrice(amount, true);
     }
 
-    public BigDecimal getSellPrice(int amount, boolean applyDiscount) {
-        BigDecimal price = BigDecimal.ZERO;
-
-        for (int i = 0; i < amount; i++) {
-            price.add(getSellPrice(applyDiscount, true));
-        }
-        return price;
-    }
-
     public BigDecimal getSellPrice(boolean applyDiscount, boolean globalMultiplier) {
         BigDecimal price;
         if (sellPrice == null) {
@@ -531,8 +529,12 @@ public class ShopItem {
         } else {
             price = sellPrice.subtract(sellPrice.multiply(BigDecimal.valueOf(discount / 100.0)));
         }
-        if (globalMultiplier)
-            price = price.multiply(BigDecimal.valueOf(ConfigManager.getDouble("global_multiplier")));
+        if (globalMultiplier) {
+            double multi = 1;
+            if (ConfigManager.get("global_multiplier") != null)
+                multi = ConfigManager.getDouble("global_multiplier");
+            price = price.multiply(BigDecimal.valueOf(multi));
+        }
         return price;
     }
 
