@@ -529,12 +529,12 @@ public class ShopItem {
         } else {
             price = sellPrice.subtract(sellPrice.multiply(BigDecimal.valueOf(discount / 100.0)));
         }
-        if (globalMultiplier) {
-            double multi = 1;
-            if (ConfigManager.get("global_multiplier") != null)
-                multi = ConfigManager.getDouble("global_multiplier");
-            price = price.multiply(BigDecimal.valueOf(multi));
-        }
+        if (globalMultiplier)
+            price = price.multiply(BigDecimal.valueOf(ConfigManager.getDouble("global_multiplier")));
+
+        if (ConfigManager.getBoolean("only_whole_numbers"))
+            price = BigDecimal.valueOf(Math.round(price.doubleValue()));
+
         return price;
     }
 

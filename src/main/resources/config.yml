@@ -12,6 +12,10 @@ auto_save_interval: 10
 tax: 0
 #Currency symbol
 currency: "$"
+#Global multiplier for all shops.
+global_multiplier: 1.0
+#If only whole numbers should be accepted when setting price, and for discounts.
+only_whole_numbers: false
 #Should the currency symbol be placed before worth?
 currency_before: false
 #Maximum item price

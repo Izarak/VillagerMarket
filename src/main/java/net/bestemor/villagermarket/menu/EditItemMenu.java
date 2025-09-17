@@ -283,6 +283,10 @@ public class EditItemMenu extends Menu {
                 return;
             }
             player.sendMessage(ConfigManager.getMessage("messages.price_successful"));
+
+            if (ConfigManager.getBoolean("only_whole_numbers"))
+                result = BigDecimal.valueOf(Math.round(result.doubleValue()));
+
             if (isBuy) {
                 item.setBuyPrice(result);
             } else {
