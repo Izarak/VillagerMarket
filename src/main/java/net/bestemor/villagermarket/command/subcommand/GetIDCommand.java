@@ -4,6 +4,11 @@ import net.bestemor.core.command.ISubCommand;
 import net.bestemor.core.config.ConfigManager;
 import net.bestemor.villagermarket.VMPlugin;
 import net.bestemor.villagermarket.shop.VillagerShop;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -77,7 +82,12 @@ public class GetIDCommand implements ISubCommand {
             VillagerShop shop = plugin.getShopManager().getShop(event.getRightClicked().getUniqueId());
             Player player = event.getPlayer();
             if (shop != null) {
-                player.sendMessage(ConfigManager.getMessage("messages.id").replace("%id%", shop.getEntityUUID().toString()));
+
+                TextComponent message = new TextComponent(ConfigManager.getMessage("messages.id").replace("%id%", shop.getEntityUUID().toString()));
+                message.setClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, shop.getEntityUUID().toString()));
+                message.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Click to copy UUID.")));
+                player.spigot().sendMessage(message);
+
             } else {
                 player.sendMessage(ConfigManager.getMessage("messages.no_villager_shop"));
                 player.sendMessage(ConfigManager.getMessage("messages.id").replace("%id%", event.getRightClicked().getUniqueId().toString()));
