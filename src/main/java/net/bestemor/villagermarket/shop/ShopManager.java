@@ -408,4 +408,8 @@ public class ShopManager {
                 .max()
                 .orElse(-1);
     }
+
+    public void setNextAutoDiscount(Instant nextAutoDiscount) {
+        this.nextAutoDiscount = nextAutoDiscount;
+    }
 }

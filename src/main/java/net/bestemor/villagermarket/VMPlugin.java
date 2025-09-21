@@ -115,6 +115,7 @@ public class VMPlugin extends CorePlugin {
                 .addSubCommand("setsize", new SetSizeCommand(this))
                 .addSubCommand("toggleperm", new ToggleRequirePermissionCommand(this))
                 .addSubCommand("open", new OpenCommand(this))
+                .addSubCommand("discounts", new AutoDiscountsCommand(this))
                 .permissionPrefix("villagermarket.command")
                 .build();
 
