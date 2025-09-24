@@ -30,6 +30,7 @@ public class ReloadCommand implements ISubCommand {
 
         plugin.reloadConfiguration();
         plugin.getShopManager().reloadAll();
+        plugin.getShopManager().loadBlacklist();
 
     }
 

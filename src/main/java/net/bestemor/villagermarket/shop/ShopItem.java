@@ -305,9 +305,6 @@ public class ShopItem {
         if (discountEnd == null || discountEnd.getEpochSecond() == 0) {
             return null;
         }
-        if (discountEnd.isBefore(Instant.now())) {
-            return Instant.now();
-        }
         if (discountEnd.isAfter(Instant.MAX)) {
             return Instant.now();
         }

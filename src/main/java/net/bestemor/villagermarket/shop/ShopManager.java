@@ -37,7 +37,7 @@ public class ShopManager {
 
     private final VMPlugin plugin;
     private final Map<UUID, VillagerShop> shops = new HashMap<>();
-    private final List<String> blackList;
+    private List<String> blackList;
 
     private Instant nextAutoDiscount = Instant.now();
 
@@ -46,10 +46,14 @@ public class ShopManager {
     public ShopManager(VMPlugin plugin) {
         this.plugin = plugin;
 
-        this.blackList = ConfigManager.getStringList("item_blacklist");
+        loadBlacklist();
 
         beginSaveThread();
         beginExpireThread();
+    }
+
+    public void loadBlacklist() {
+        blackList = ConfigManager.getStringList("item_blacklist");
     }
 
     public void load() {
