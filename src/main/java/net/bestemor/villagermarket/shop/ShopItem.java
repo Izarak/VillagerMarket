@@ -482,10 +482,6 @@ public class ShopItem {
         return i;
     }
 
-    public ItemStack getCustomerItem(Player p, int amount) {
-        return getCustomerItem(p, amount, mode.inverted());
-    }
-
     public ItemStack getCustomerItem(Player p, int amount, ItemMode mode) {
         ItemStack i = getRawItem();
         i.setAmount(Math.min(amount, item.getMaxStackSize()));
@@ -526,6 +522,7 @@ public class ShopItem {
         } else {
             price = sellPrice.subtract(sellPrice.multiply(BigDecimal.valueOf(discount / 100.0)));
         }
+
         if (globalMultiplier)
             price = price.multiply(BigDecimal.valueOf(ConfigManager.getDouble("global_multiplier")));
 
@@ -551,14 +548,14 @@ public class ShopItem {
         if (getBuyPrice(applyDiscount) == null) {
             return BigDecimal.ZERO;
         }
-        return getBuyPrice(applyDiscount).divide(BigDecimal.valueOf(item.getAmount()), 2, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(amount));
+        return getBuyPrice(applyDiscount).divide(BigDecimal.valueOf(item.getAmount()), 8, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(amount));
     }
 
     public BigDecimal getSellPrice(int amount, boolean applyDiscount, boolean globalMultiplier) {
         if (sellPrice == null) {
             return BigDecimal.ZERO;
         }
-        return getSellPrice(applyDiscount, globalMultiplier).divide(BigDecimal.valueOf(item.getAmount()), 2, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(amount));
+        return getSellPrice(applyDiscount, globalMultiplier).divide(BigDecimal.valueOf(item.getAmount()), 8, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(amount));
     }
 
     private String getItemName(ItemStack i) {

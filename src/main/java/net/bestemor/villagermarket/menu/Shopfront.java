@@ -145,7 +145,7 @@ public class Shopfront {
             if (item == null) {
                 continue;
             }
-            customerInventory.setItem(slot, item.getCustomerItem(player, item.getAmount()));
+            customerInventory.setItem(slot, item.getCustomerItem(player, item.getAmount(), item.getMode().inverted()));
         }
         buildBottom(customerInventory);
         if (!ConfigManager.getBoolean("disable_lore_toggle")) {

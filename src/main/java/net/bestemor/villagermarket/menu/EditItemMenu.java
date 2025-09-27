@@ -101,7 +101,7 @@ public class EditItemMenu extends Menu {
         } else if (item.getMode() == ItemMode.BUY_AND_SELL) {
             priceBuilder.replace("%price%", VMUtils.formatBuySellPrice(item.getBuyPrice(false), item.getSellPrice(false, true)));
         } else {
-            priceBuilder.replaceCurrency("%price%", item.getSellPrice(false, true));
+            priceBuilder.replace("%price%", item.getSellPrice(false, true).toString());
         }
         ItemStack priceItem = priceBuilder.build();
         if (item.getMode() == ItemMode.BUY_AND_SELL) {
@@ -310,7 +310,7 @@ public class EditItemMenu extends Menu {
                 return;
             }
             if (discount == 0) {
-                item.setDiscount(0, Instant.MIN);
+                item.setDiscount(0, Instant.now());
                 update();
                 open(player);
                 return;
