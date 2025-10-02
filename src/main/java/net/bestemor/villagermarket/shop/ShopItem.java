@@ -8,7 +8,6 @@ import net.bestemor.villagermarket.menu.EditItemMenu;
 import net.bestemor.villagermarket.menu.StorageHolder;
 import net.bestemor.villagermarket.utils.VMUtils;
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -285,7 +284,7 @@ public class ShopItem {
         this.available = shop.getAvailable(this);
     }
 
-    private void resetCooldown() {
+    public void resetCooldown() {
         this.nextReset = VMUtils.getTimeFromNow(cooldown);
         if (nextReset.getEpochSecond() == 0) {
             this.cooldown = null;
